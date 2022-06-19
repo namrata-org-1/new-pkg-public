@@ -6,10 +6,6 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/namrata-org-1/new-pkg-public.git"
-  },
   "author": "",
   "license": "ISC",
   "bugs": {

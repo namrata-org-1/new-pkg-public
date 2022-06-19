@@ -1,0 +1,59 @@
+name: npm-new-pkg-public-publish
+on:
+  push:
+  workflow_dispatch:
+  
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        token: ['${INVALID_TOKEN}', '${NO_SCOPE_TOKEN}', '${READ_PACKAGES_TOKEN}','${READ_WRITE_PACKAGES_TOKEN}', '${GITHUB_TOKEN}' ]
+
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      READ_PACKAGES_TOKEN: ${{ secrets.READ_PACKAGES_TOKEN }}
+      READ_WRITE_PACKAGES_TOKEN: ${{secrets.READ_WRITE_PACKAGES_TOKEN}}
+      NO_SCOPE_TOKEN: ${{ secrets.NO_SCOPE_TOKEN }}
+      INVALID_TOKEN: ${{ secrets.INVALID_TOKEN }}
+
+    steps:           
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+        with: 
+          node-version: 16
+          registry-url: https://npm.pkg.github.com
+          token: ${{ matrix.token }}
+
+      - name: setup-npmrc
+        id: setup-npmrc
+        run: |
+          echo "//npm.pkg.github.com/:_authToken=${{ matrix.token }}" > .npmrc
+
+      - name: git pull before bump
+        run: git pull
+
+      - name: publish new-pkg-public-with-repo
+        if: always()
+        run: |
+          cd new-pkg-public-with-repo
+          npm version major
+          cd ..
+          npm publish ./new-pkg-public-with-repo --registry=https://npm.pkg.github.com
+
+      - name: publish new-pkg-public-without-repo
+        if: always()
+        run: |
+          cd new-pkg-public-without-repo
+          npm version major
+          cd ..
+          npm publish ./new-pkg-public-without-repo --registry=https://npm.pkg.github.com
+      
+      - uses: EndBug/add-and-commit@v9
+        if: always()
+        with: 
+          default_author: github_actions

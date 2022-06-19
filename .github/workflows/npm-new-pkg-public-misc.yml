@@ -1,0 +1,135 @@
+name: npm-new-pkg-public-misc
+on:
+  workflow_dispatch:
+  
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        token: ['${INVALID_TOKEN}', '${NO_SCOPE_TOKEN}', '${READ_PACKAGES_TOKEN}','${READ_WRITE_PACKAGES_TOKEN}', '${GITHUB_TOKEN}' ]
+
+    env:
+      org: ${{ github.repository_owner }}
+      curl_custom_flags: "--fail"
+      GITHUB_API_BASE_URL: https://api.github.com
+      GITHUB_APIV4_BASE_URL: https://api.github.com/graphql
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      READ_PACKAGES_TOKEN: ${{ secrets.READ_PACKAGES_TOKEN }}
+      READ_WRITE_PACKAGES_TOKEN: ${{secrets.READ_WRITE_PACKAGES_TOKEN}}
+      NO_SCOPE_TOKEN: ${{ secrets.NO_SCOPE_TOKEN }}
+      INVALID_TOKEN: ${{ secrets.INVALID_TOKEN }}
+
+    steps:         
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+        with: 
+          node-version: 16
+          registry-url: https://npm.pkg.github.com
+          token: ${{ matrix.token }}
+
+      - name: setup-npmrc
+        id: setup-npmrc
+        run: |
+          echo "//npm.pkg.github.com/:_authToken=${{ matrix.token }}" > .npmrc
+         
+      - name: npm-login
+        id: npm-login
+        if: always()
+        run: |
+          curl -s  ${curl_custom_flags} \
+          -H "Accept: application/json" \
+          -H "Content-Type:application/json" \
+          -X PUT --data "{\"name\": \"${{ github.actor }}\", \"password\": \"${{ matrix.token }}\"}" \
+          https://npm.pkg.github.com/-/user/org.couchdb.user:${{ github.actor }}
+
+      - name: npm whoami
+        if: always()
+        run: npm whoami --registry=https://npm.pkg.github.com
+
+      - name: npm view new pkg with repo
+        if: always()
+        run: |
+          npm view @namrata-org-1/new-pkg-public-with-repo@1.0.0 --registry=https://npm.pkg.github.com
+          npm view @namrata-org-1/new-pkg-public-with-repo@latest --registry=https://npm.pkg.github.com
+
+      - name: npm dist-tags new pkg with repo
+        if: always()
+        run: |
+          npm dist-tag add @namrata-org-1/new-pkg-public-with-repo@1.0.0 "first version" --registry=https://npm.pkg.github.com
+          npm dist-tag ls @namrata-org-1/new-pkg-public-with-repo --registry=https://npm.pkg.github.com
+          npm dist-tag rm @namrata-org-1/new-pkg-public-with-repo@1.0.0 "first version" --registry=https://npm.pkg.github.com
+
+      - name: npm view new pkg without repo
+        if: always()
+        run: |
+          npm view @namrata-org-1/new-pkg-public-without-repo@1.0.0 --registry=https://npm.pkg.github.com
+          npm view @namrata-org-1/new-pkg-public-without-repo@latest --registry=https://npm.pkg.github.com
+
+      - name: npm dist-tags new pkg without repo
+        if: always()
+        run: |
+          npm dist-tag add @namrata-org-1/new-pkg-public-without-repo@1.0.0 "first version" --registry=https://npm.pkg.github.com
+          npm dist-tag ls @namrata-org-1/new-pkg-public-without-repo --registry=https://npm.pkg.github.com
+          npm dist-tag rm @namrata-org-1/new-pkg-public-without-repo@1.0.0 "first version" --registry=https://npm.pkg.github.com
+
+      - name: graphql-list-packages
+        id: graphql-list-packages
+        if: always()
+        run: |
+            graphql_query=graphql_query.txt
+
+            cat <<EOF > $graphql_query
+            {
+            organization(login: "$org") {
+                packages(first: 100) {
+                nodes {
+                    packageType
+                    name
+                    latestVersion {
+                    version
+                    }
+                    repository {
+                    name
+                    }
+                    statistics {
+                    downloadsTotalCount
+                    }
+                }
+                totalCount
+                }
+            }
+            }
+            EOF
+
+            cat >&2 $graphql_query
+
+            json_file=graphql-payload.json
+            rm -f ${json_file}
+
+            jq -n \
+            --arg graphql_query "$(cat $graphql_query)" \
+            '{query: $graphql_query}' > ${json_file}
+
+            curl ${curl_custom_flags} \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H 'Accept: application/vnd.github.audit-log-preview+json' \
+            -H "Authorization: token ${{ matrix.token }}" \
+                ${GITHUB_APIV4_BASE_URL} -d @${json_file} | jq
+
+            rm -f ${graphql_query}
+            rm -f ${json_file}
+              
+      - name: list-packages-npm
+        id: list-packages-npm
+        if: always()
+        run: |
+          package_type=npm
+          curl --request GET \
+               -H "Accept: application/vnd.github.v3+json" \
+               -H "Authorization: token ${{ matrix.token }}" \
+                  ${GITHUB_API_BASE_URL}/orgs/${org}/packages/${package_type}/new-pkg-public-with-repo
+          

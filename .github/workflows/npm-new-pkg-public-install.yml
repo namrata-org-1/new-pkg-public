@@ -1,0 +1,50 @@
+name: npm-new-pkg-public-install
+on:
+  push: 
+  workflow_dispatch:
+  
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        token: ['${INVALID_TOKEN}', '${NO_SCOPE_TOKEN}', '${READ_PACKAGES_TOKEN}','${READ_WRITE_PACKAGES_TOKEN}', '${GITHUB_TOKEN}' ]
+
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      READ_PACKAGES_TOKEN: ${{ secrets.READ_PACKAGES_TOKEN }}
+      READ_WRITE_PACKAGES_TOKEN: ${{secrets.READ_WRITE_PACKAGES_TOKEN}}
+      NO_SCOPE_TOKEN: ${{ secrets.NO_SCOPE_TOKEN }}
+      INVALID_TOKEN: ${{ secrets.INVALID_TOKEN }}
+
+    steps:           
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+        with: 
+          node-version: 16
+          registry-url: https://npm.pkg.github.com
+          token: ${{ matrix.token }}
+
+      - name: setup-npmrc
+        id: setup-npmrc
+        run: |
+          echo "//npm.pkg.github.com/:_authToken=${{ matrix.token }}" > .npmrc
+
+      - name: npm-install-new-pkg-public-with-repo
+        id: npm-install-new-pkg-public-with-repo
+        if: always()
+        run: |
+          npm install @namrata-org-1/new-pkg-public-with-repo@1.0.0
+          npm install @namrata-org-1/new-pkg-public-with-repo@latest
+
+      - name: npm-install-new-pkg-public-without-repo
+        id: npm-install-new-pkg-public-without-repo
+        if: always()
+        run: |
+          npm install @namrata-org-1/new-pkg-public-without-repo@1.0.0
+          npm install @namrata-org-1/new-pkg-public-without-repo@latest
+
+
+      
