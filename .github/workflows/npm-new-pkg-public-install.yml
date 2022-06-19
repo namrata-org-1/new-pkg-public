@@ -36,14 +36,14 @@ jobs:
         id: npm-install-new-pkg-public-with-repo
         if: always()
         run: |
-          npm install @namrata-org-1/new-pkg-public-with-repo@1.0.0
+          npm install @namrata-org-1/new-pkg-public-with-repo@4.0.0
           npm install @namrata-org-1/new-pkg-public-with-repo@latest
 
       - name: npm-install-new-pkg-public-without-repo
         id: npm-install-new-pkg-public-without-repo
         if: always()
         run: |
-          npm install @namrata-org-1/new-pkg-public-without-repo@1.0.0
+          npm install @namrata-org-1/new-pkg-public-without-repo@4.0.0
           npm install @namrata-org-1/new-pkg-public-without-repo@latest
 
 

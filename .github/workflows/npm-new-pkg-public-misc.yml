@@ -53,28 +53,28 @@ jobs:
       - name: npm view new pkg with repo
         if: always()
         run: |
-          npm view @namrata-org-1/new-pkg-public-with-repo@1.0.0 --registry=https://npm.pkg.github.com
+          npm view @namrata-org-1/new-pkg-public-with-repo@4.0.0 --registry=https://npm.pkg.github.com
           npm view @namrata-org-1/new-pkg-public-with-repo@latest --registry=https://npm.pkg.github.com
 
       - name: npm dist-tags new pkg with repo
         if: always()
         run: |
-          npm dist-tag add @namrata-org-1/new-pkg-public-with-repo@1.0.0 "first version" --registry=https://npm.pkg.github.com
+          npm dist-tag add @namrata-org-1/new-pkg-public-with-repo@4.0.0 "first version" --registry=https://npm.pkg.github.com
           npm dist-tag ls @namrata-org-1/new-pkg-public-with-repo --registry=https://npm.pkg.github.com
-          npm dist-tag rm @namrata-org-1/new-pkg-public-with-repo@1.0.0 "first version" --registry=https://npm.pkg.github.com
+          npm dist-tag rm @namrata-org-1/new-pkg-public-with-repo@4.0.0 "first version" --registry=https://npm.pkg.github.com
 
       - name: npm view new pkg without repo
         if: always()
         run: |
-          npm view @namrata-org-1/new-pkg-public-without-repo@1.0.0 --registry=https://npm.pkg.github.com
+          npm view @namrata-org-1/new-pkg-public-without-repo@4.0.0 --registry=https://npm.pkg.github.com
           npm view @namrata-org-1/new-pkg-public-without-repo@latest --registry=https://npm.pkg.github.com
 
       - name: npm dist-tags new pkg without repo
         if: always()
         run: |
-          npm dist-tag add @namrata-org-1/new-pkg-public-without-repo@1.0.0 "first version" --registry=https://npm.pkg.github.com
+          npm dist-tag add @namrata-org-1/new-pkg-public-without-repo@4.0.0 "first version" --registry=https://npm.pkg.github.com
           npm dist-tag ls @namrata-org-1/new-pkg-public-without-repo --registry=https://npm.pkg.github.com
-          npm dist-tag rm @namrata-org-1/new-pkg-public-without-repo@1.0.0 "first version" --registry=https://npm.pkg.github.com
+          npm dist-tag rm @namrata-org-1/new-pkg-public-without-repo@4.0.0 "first version" --registry=https://npm.pkg.github.com
 
       - name: graphql-list-packages
         id: graphql-list-packages
